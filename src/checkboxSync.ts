@@ -6,11 +6,14 @@ export { TaskState };
 
 export const TASK_RE = /^(\s*)([-*+]|\d+[.)])\s+\[([ xX\-/><])\](.*)$/;
 
+const BULLET_RE = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+
 type TaskLine = {
 	line: number;
 	raw: string;
 	indent: number;
 	state: TaskState;
+	isCheckbox: boolean;
 	children: number[];
 };
 
@@ -106,7 +109,8 @@ function replaceCheckboxMarker(line: string, marker: string): string {
 
 export function computeCheckboxEdits(
 	content: string,
-	rules: ParentRule[]
+	rules: ParentRule[],
+	nonCheckboxDefaultState: TaskState
 ): Array<{ line: number; text: string }> {
 	const compiledRules: CompiledRule[] = rules.map((rule) => ({
 		rule,
@@ -119,16 +123,32 @@ export function computeCheckboxEdits(
 
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const raw = lines[lineNo]!;
-		const match = raw.match(TASK_RE);
+		const taskMatch = raw.match(TASK_RE);
 
-		if (!match) continue;
+		if (taskMatch) {
+			lineToTaskIndex.set(lineNo, tasks.length);
+			tasks.push({
+				line: lineNo,
+				raw,
+				indent: measureIndent(taskMatch[1]!),
+				state: markerToState(taskMatch[3]!),
+				isCheckbox: true,
+				children: []
+			});
+			continue;
+		}
+
+		const bulletMatch = raw.match(BULLET_RE);
+
+		if (!bulletMatch) continue;
 
 		lineToTaskIndex.set(lineNo, tasks.length);
 		tasks.push({
 			line: lineNo,
 			raw,
-			indent: measureIndent(match[1]!),
-			state: markerToState(match[3]!),
+			indent: measureIndent(bulletMatch[1]!),
+			state: nonCheckboxDefaultState,
+			isCheckbox: false,
 			children: []
 		});
 	}
@@ -143,7 +163,7 @@ export function computeCheckboxEdits(
 	for (let i = tasks.length - 1; i >= 0; i--) {
 		const task = tasks[i]!;
 
-		if (task.children.length === 0) continue;
+		if (!task.isCheckbox || task.children.length === 0) continue;
 
 		const childStates = task.children.map((childIndex) => {
 			const child = tasks[childIndex]!;

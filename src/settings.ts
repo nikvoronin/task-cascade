@@ -10,6 +10,7 @@ export interface AutoParentCheckboxSettings {
 	rules: ParentRule[];
 	nextRuleId: number;
 	taskDotShortcutEnabled: boolean;
+	nonCheckboxDefaultState: TaskState;
 }
 
 function cloneDefaultRules(): ParentRule[] {
@@ -20,7 +21,8 @@ export function createDefaultSettings(): AutoParentCheckboxSettings {
 	return {
 		rules: cloneDefaultRules(),
 		nextRuleId: DEFAULT_RULES.length,
-		taskDotShortcutEnabled: true
+		taskDotShortcutEnabled: true,
+		nonCheckboxDefaultState: TaskState.Todo
 	};
 }
 
@@ -35,6 +37,13 @@ const ALL_STATES: TaskState[] = [
 	TaskState.Scheduling
 ];
 
+const NON_CHECKBOX_DEFAULT_STATES: TaskState[] = [
+	TaskState.Todo,
+	TaskState.Done,
+	TaskState.Cancelled,
+	TaskState.InProgress
+];
+
 const STATE_LABELS: Record<TaskState, string> = {
 	[TaskState.Todo]: "Todo",
 	[TaskState.Done]: "Done",
@@ -47,6 +56,7 @@ const STATE_LABELS: Record<TaskState, string> = {
 export class AutoParentRuleSettingTab extends PluginSettingTab {
 	plugin: AutoParentCheckboxPlugin;
 	private readonly previewStates = new Set<TaskState>();
+	private includeNonCheckboxInPreview = false;
 	private previewResultEl: HTMLElement | null = null;
 
 	constructor(app: App, plugin: AutoParentCheckboxPlugin) {
@@ -64,6 +74,26 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			.setName("Rules")
 			.setDesc("Rules are checked top to bottom; the first match wins.")
 			.setHeading();
+
+		new Setting(containerEl)
+			.setName("Non-checkbox or task items")
+			.setDesc(
+				"Default value used when a list item isn't a valid checkbox or has an unrecognized marker. " +
+					"Not a rule — just the value such items count as when a parent's rules are evaluated."
+			)
+			.addDropdown((dropdown) => {
+				for (const state of NON_CHECKBOX_DEFAULT_STATES) {
+					dropdown.addOption(state, STATE_LABELS[state]);
+				}
+
+				dropdown
+					.setValue(this.plugin.settings.nonCheckboxDefaultState)
+					.onChange(async (value) => {
+						this.plugin.settings.nonCheckboxDefaultState = value as TaskState;
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
 
 		this.plugin.settings.rules.forEach((rule, index) => {
 			this.renderRuleRow(containerEl, rule, index);
@@ -151,18 +181,37 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			});
 		}
 
+		const nonCheckboxRowEl = statusListEl.createEl("label", { cls: "apc-preview-status" });
+
+		const nonCheckboxCheckbox = nonCheckboxRowEl.createEl("input", { type: "checkbox" });
+		nonCheckboxCheckbox.checked = this.includeNonCheckboxInPreview;
+
+		nonCheckboxRowEl.createSpan({ cls: "apc-preview-marker", text: " • " });
+		nonCheckboxRowEl.createSpan({
+			text: `Not a checkbox / unrecognized marker ` +
+				`(as "${STATE_LABELS[this.plugin.settings.nonCheckboxDefaultState]}")`});
+
+		nonCheckboxCheckbox.addEventListener("change", () => {
+			this.includeNonCheckboxInPreview = nonCheckboxCheckbox.checked;
+			this.updatePreviewResult();
+		});
+
 		this.updatePreviewResult();
 	}
 
 	private updatePreviewResult(): void {
 		if (!this.previewResultEl) return;
 
-		if (this.previewStates.size === 0) {
+		if (this.previewStates.size === 0 && !this.includeNonCheckboxInPreview) {
 			this.previewResultEl.setText("Check at least one status...");
 			return;
 		}
 
 		const childStates = Array.from(this.previewStates);
+
+		if (this.includeNonCheckboxInPreview) {
+			childStates.push(this.plugin.settings.nonCheckboxDefaultState);
+		}
 
 		let matchedRuleNumber: number | null = null;
 		let outcome: TaskState | null = null;
