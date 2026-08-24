@@ -10,7 +10,7 @@ export interface AutoParentCheckboxSettings {
 	rules: ParentRule[];
 	nextRuleId: number;
 	taskDotShortcutEnabled: boolean;
-	nonCheckboxDefaultState: TaskState;
+	unknownCheckboxDefaultState: TaskState;
 }
 
 function cloneDefaultRules(): ParentRule[] {
@@ -22,7 +22,7 @@ export function createDefaultSettings(): AutoParentCheckboxSettings {
 		rules: cloneDefaultRules(),
 		nextRuleId: DEFAULT_RULES.length,
 		taskDotShortcutEnabled: true,
-		nonCheckboxDefaultState: TaskState.Todo
+		unknownCheckboxDefaultState: TaskState.Todo
 	};
 }
 
@@ -37,7 +37,7 @@ const ALL_STATES: TaskState[] = [
 	TaskState.Scheduling
 ];
 
-const NON_CHECKBOX_DEFAULT_STATES: TaskState[] = [
+const UNKNOWN_CHECKBOX_DEFAULT_STATES: TaskState[] = [
 	TaskState.Todo,
 	TaskState.Done,
 	TaskState.Cancelled,
@@ -56,7 +56,7 @@ const STATE_LABELS: Record<TaskState, string> = {
 export class AutoParentRuleSettingTab extends PluginSettingTab {
 	plugin: AutoParentCheckboxPlugin;
 	private readonly previewStates = new Set<TaskState>();
-	private includeNonCheckboxInPreview = false;
+	private includeUnknownCheckboxInPreview = false;
 	private previewResultEl: HTMLElement | null = null;
 
 	constructor(app: App, plugin: AutoParentCheckboxPlugin) {
@@ -76,20 +76,22 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			.setHeading();
 
 		new Setting(containerEl)
-			.setName("Non-checkbox or task items")
+			.setName("Unknown checkbox status")
 			.setDesc(
-				"Default value used when a list item isn't a valid checkbox or has an unrecognized marker. " +
-					"Not a rule — just the value such items count as when a parent's rules are evaluated."
+				"Default value used when a checkbox has a single unrecognized status character " +
+					"(e.g. \"- [?]\"). List items that aren't checkboxes at all, and checkboxes " +
+					"with empty or multi-character brackets (e.g. \"- []\", \"- [xy]\"), are " +
+					"ignored and never affect a parent's rules."
 			)
 			.addDropdown((dropdown) => {
-				for (const state of NON_CHECKBOX_DEFAULT_STATES) {
+				for (const state of UNKNOWN_CHECKBOX_DEFAULT_STATES) {
 					dropdown.addOption(state, STATE_LABELS[state]);
 				}
 
 				dropdown
-					.setValue(this.plugin.settings.nonCheckboxDefaultState)
+					.setValue(this.plugin.settings.unknownCheckboxDefaultState)
 					.onChange(async (value) => {
-						this.plugin.settings.nonCheckboxDefaultState = value as TaskState;
+						this.plugin.settings.unknownCheckboxDefaultState = value as TaskState;
 						await this.plugin.saveSettings();
 						this.display();
 					});
@@ -181,18 +183,18 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			});
 		}
 
-		const nonCheckboxRowEl = statusListEl.createEl("label", { cls: "apc-preview-status" });
+		const unknownCheckboxRowEl = statusListEl.createEl("label", { cls: "apc-preview-status" });
 
-		const nonCheckboxCheckbox = nonCheckboxRowEl.createEl("input", { type: "checkbox" });
-		nonCheckboxCheckbox.checked = this.includeNonCheckboxInPreview;
+		const unknownCheckboxCheckbox = unknownCheckboxRowEl.createEl("input", { type: "checkbox" });
+		unknownCheckboxCheckbox.checked = this.includeUnknownCheckboxInPreview;
 
-		nonCheckboxRowEl.createSpan({ cls: "apc-preview-marker", text: " • " });
-		nonCheckboxRowEl.createSpan({
-			text: `Not a checkbox / unrecognized marker ` +
-				`(as "${STATE_LABELS[this.plugin.settings.nonCheckboxDefaultState]}")`});
+		unknownCheckboxRowEl.createSpan({ cls: "apc-preview-marker", text: "[⁇]" });
+		unknownCheckboxRowEl.createSpan({
+			text: `Checkbox with unrecognized status ` +
+				`(as "${STATE_LABELS[this.plugin.settings.unknownCheckboxDefaultState]}")`});
 
-		nonCheckboxCheckbox.addEventListener("change", () => {
-			this.includeNonCheckboxInPreview = nonCheckboxCheckbox.checked;
+		unknownCheckboxCheckbox.addEventListener("change", () => {
+			this.includeUnknownCheckboxInPreview = unknownCheckboxCheckbox.checked;
 			this.updatePreviewResult();
 		});
 
@@ -202,15 +204,15 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 	private updatePreviewResult(): void {
 		if (!this.previewResultEl) return;
 
-		if (this.previewStates.size === 0 && !this.includeNonCheckboxInPreview) {
-			this.previewResultEl.setText("Check at least one status...");
+		if (this.previewStates.size === 0 && !this.includeUnknownCheckboxInPreview) {
+			this.previewResultEl.setText("- [ ] Check at least one status...");
 			return;
 		}
 
 		const childStates = Array.from(this.previewStates);
 
-		if (this.includeNonCheckboxInPreview) {
-			childStates.push(this.plugin.settings.nonCheckboxDefaultState);
+		if (this.includeUnknownCheckboxInPreview) {
+			childStates.push(this.plugin.settings.unknownCheckboxDefaultState);
 		}
 
 		let matchedRuleNumber: number | null = null;

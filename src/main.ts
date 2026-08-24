@@ -90,7 +90,7 @@ export default class AutoParentCheckboxPlugin extends Plugin {
 		const edits = computeCheckboxEdits(
 			editor.getValue(),
 			this.settings.rules,
-			this.settings.nonCheckboxDefaultState
+			this.settings.unknownCheckboxDefaultState
 		);
 
 		if (edits.length === 0) return;

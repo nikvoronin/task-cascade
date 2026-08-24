@@ -6,7 +6,7 @@ export { TaskState };
 
 export const TASK_RE = /^(\s*)([-*+]|\d+[.)])\s+\[([ xX\-/><])\](.*)$/;
 
-const BULLET_RE = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+const UNKNOWN_CHECKBOX_RE = /^(\s*)([-*+]|\d+[.)])\s+\[(.)\](.*)$/;
 
 type TaskLine = {
 	line: number;
@@ -110,7 +110,7 @@ function replaceCheckboxMarker(line: string, marker: string): string {
 export function computeCheckboxEdits(
 	content: string,
 	rules: ParentRule[],
-	nonCheckboxDefaultState: TaskState
+	unknownCheckboxDefaultState: TaskState
 ): Array<{ line: number; text: string }> {
 	const compiledRules: CompiledRule[] = rules.map((rule) => ({
 		rule,
@@ -138,16 +138,16 @@ export function computeCheckboxEdits(
 			continue;
 		}
 
-		const bulletMatch = raw.match(BULLET_RE);
+		const unknownMatch = raw.match(UNKNOWN_CHECKBOX_RE);
 
-		if (!bulletMatch) continue;
+		if (!unknownMatch) continue;
 
 		lineToTaskIndex.set(lineNo, tasks.length);
 		tasks.push({
 			line: lineNo,
 			raw,
-			indent: measureIndent(bulletMatch[1]!),
-			state: nonCheckboxDefaultState,
+			indent: measureIndent(unknownMatch[1]!),
+			state: unknownCheckboxDefaultState,
 			isCheckbox: false,
 			children: []
 		});
