@@ -2,6 +2,10 @@
 
 Task Cascade keeps a parent checklist item's status in sync with its children, and adds a quick shortcut for tagging a task to be deleted once it's done.
 
+![Task Hierarchy Demo](https://github.com/user-attachments/assets/96faf4b3-4308-4e95-9d76-8094391caad7)
+
+_※ Note: Tasks are ordered from top to bottom. Their horizontal positions in the image are adjusted for compactness and do not reflect the actual layout._
+
 ## Supported statuses
 
 | Marker | Status |
