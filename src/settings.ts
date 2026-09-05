@@ -10,6 +10,7 @@ export interface AutoParentCheckboxSettings {
 	rules: ParentRule[];
 	nextRuleId: number;
 	taskDotShortcutEnabled: boolean;
+	unknownCheckboxDefaultState: TaskState;
 }
 
 function cloneDefaultRules(): ParentRule[] {
@@ -20,7 +21,8 @@ export function createDefaultSettings(): AutoParentCheckboxSettings {
 	return {
 		rules: cloneDefaultRules(),
 		nextRuleId: DEFAULT_RULES.length,
-		taskDotShortcutEnabled: true
+		taskDotShortcutEnabled: true,
+		unknownCheckboxDefaultState: TaskState.Todo
 	};
 }
 
@@ -35,6 +37,13 @@ const ALL_STATES: TaskState[] = [
 	TaskState.Scheduling
 ];
 
+const UNKNOWN_CHECKBOX_DEFAULT_STATES: TaskState[] = [
+	TaskState.Todo,
+	TaskState.Done,
+	TaskState.Cancelled,
+	TaskState.InProgress
+];
+
 const STATE_LABELS: Record<TaskState, string> = {
 	[TaskState.Todo]: "Todo",
 	[TaskState.Done]: "Done",
@@ -47,6 +56,7 @@ const STATE_LABELS: Record<TaskState, string> = {
 export class AutoParentRuleSettingTab extends PluginSettingTab {
 	plugin: AutoParentCheckboxPlugin;
 	private readonly previewStates = new Set<TaskState>();
+	private includeUnknownCheckboxInPreview = false;
 	private previewResultEl: HTMLElement | null = null;
 
 	constructor(app: App, plugin: AutoParentCheckboxPlugin) {
@@ -64,6 +74,28 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			.setName("Rules")
 			.setDesc("Rules are checked top to bottom; the first match wins.")
 			.setHeading();
+
+		new Setting(containerEl)
+			.setName("Unknown checkbox status")
+			.setDesc(
+				"Default value used when a checkbox has a single unrecognized status character " +
+					"(e.g. \"- [?]\"). List items that aren't checkboxes at all, and checkboxes " +
+					"with empty or multi-character brackets (e.g. \"- []\", \"- [xy]\"), are " +
+					"ignored and never affect a parent's rules."
+			)
+			.addDropdown((dropdown) => {
+				for (const state of UNKNOWN_CHECKBOX_DEFAULT_STATES) {
+					dropdown.addOption(state, STATE_LABELS[state]);
+				}
+
+				dropdown
+					.setValue(this.plugin.settings.unknownCheckboxDefaultState)
+					.onChange(async (value) => {
+						this.plugin.settings.unknownCheckboxDefaultState = value as TaskState;
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
 
 		this.plugin.settings.rules.forEach((rule, index) => {
 			this.renderRuleRow(containerEl, rule, index);
@@ -151,18 +183,37 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			});
 		}
 
+		const unknownCheckboxRowEl = statusListEl.createEl("label", { cls: "apc-preview-status" });
+
+		const unknownCheckboxCheckbox = unknownCheckboxRowEl.createEl("input", { type: "checkbox" });
+		unknownCheckboxCheckbox.checked = this.includeUnknownCheckboxInPreview;
+
+		unknownCheckboxRowEl.createSpan({ cls: "apc-preview-marker", text: "[⁇]" });
+		unknownCheckboxRowEl.createSpan({
+			text: `Checkbox with unrecognized status ` +
+				`(as "${STATE_LABELS[this.plugin.settings.unknownCheckboxDefaultState]}")`});
+
+		unknownCheckboxCheckbox.addEventListener("change", () => {
+			this.includeUnknownCheckboxInPreview = unknownCheckboxCheckbox.checked;
+			this.updatePreviewResult();
+		});
+
 		this.updatePreviewResult();
 	}
 
 	private updatePreviewResult(): void {
 		if (!this.previewResultEl) return;
 
-		if (this.previewStates.size === 0) {
-			this.previewResultEl.setText("Check at least one status...");
+		if (this.previewStates.size === 0 && !this.includeUnknownCheckboxInPreview) {
+			this.previewResultEl.setText("- [ ] Check at least one status...");
 			return;
 		}
 
 		const childStates = Array.from(this.previewStates);
+
+		if (this.includeUnknownCheckboxInPreview) {
+			childStates.push(this.plugin.settings.unknownCheckboxDefaultState);
+		}
 
 		let matchedRuleNumber: number | null = null;
 		let outcome: TaskState | null = null;

@@ -8,7 +8,7 @@ import {
 } from "./settings";
 
 export default class AutoParentCheckboxPlugin extends Plugin {
-	settings: AutoParentCheckboxSettings;
+	settings!: AutoParentCheckboxSettings;
 	private isApplying = false;
 	private timer: number | null = null;
 
@@ -87,7 +87,11 @@ export default class AutoParentCheckboxPlugin extends Plugin {
 	private updateParentCheckboxes(editor: Editor) {
 		if (this.isApplying) return;
 
-		const edits = computeCheckboxEdits(editor.getValue(), this.settings.rules);
+		const edits = computeCheckboxEdits(
+			editor.getValue(),
+			this.settings.rules,
+			this.settings.unknownCheckboxDefaultState
+		);
 
 		if (edits.length === 0) return;
 
