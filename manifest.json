@@ -1,10 +1,10 @@
 {
   "id": "task-cascade",
   "name": "Task Cascade",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "minAppVersion": "1.8.7",
   "description": "Keeps parent checkboxes in sync with their children's status using configurable rules.",
   "author": "Nikolai Voronin",
-  "authorUrl": "https://github.com/nikvoronin/task-cascade",
+  "authorUrl": "https://github.com/nikvoronin",
   "isDesktopOnly": false
 }
