@@ -25,7 +25,7 @@
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	margin: 8px 0 16px 24px;
+	margin: 8px 0 16px 16px;
 }
 
 .apc-preview-status {
@@ -37,10 +37,6 @@
 
 .apc-preview-card {
 	background: var(--background-secondary);
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-m, 8px);
-	padding: 12px 16px;
-	margin-bottom: 16px;
 }
 
 .apc-preview-marker {
@@ -54,5 +50,5 @@
 
 .apc-rule-actions .setting-item-control {
 	flex: 1 1 auto;
-	justify-content: space-between;
+	justify-content: flex-end;
 }

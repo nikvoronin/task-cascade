@@ -72,6 +72,8 @@ If `Task Cascade` isn't available in the Community plugins catalog yet, you can 
 2. Create a folder named `task-cascade` inside your vault's `.obsidian/plugins/` directory and place the three downloaded files there.
 3. In Obsidian, open **Settings → Community plugins**, reload the plugin list if needed, and enable **Task Cascade**.
 
+> **Older Obsidian versions:** starting with version 1.0.0, Task Cascade requires Obsidian 1.13.0 or later (it uses the declarative settings API). If you're on an older Obsidian version, manually install the [0.2.2 release](https://github.com/nikvoronin/task-cascade/releases/tag/0.2.2) instead, following the same steps above.
+
 ## Development
 
 Requirements: Node.js and npm installed.
