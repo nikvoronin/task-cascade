@@ -14,9 +14,8 @@ _※ Note: Tasks are ordered from top to bottom. Their horizontal positions in t
 - [Development](#development)
 - [Release Notes](#release-notes)
 
-> [!WARNING] Older Obsidian versions
-> Task Cascade 1.0.0 and later requires Obsidian 1.13.0 or newer due to its use of the declarative settings API.
->
+> [!WARNING]
+> Task Cascade 1.0.0 and later requires Obsidian 1.13.0 or newer due to its use of the declarative settings API.\
 > If you're using an older version of Obsidian, install [Task Cascade 0.2.2](https://github.com/nikvoronin/task-cascade/releases/tag/0.2.2), the last compatible release.
 
 ## How it works
