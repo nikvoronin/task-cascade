@@ -1,7 +1,3 @@
-.apc-rule-error .setting-item-description {
-	color: var(--text-error);
-}
-
 .apc-preview-result {
 	font-weight: 600;
 	color: var(--text-accent);
@@ -13,12 +9,44 @@
 	width: auto;
 }
 
+.apc-rule-row {
+	flex-wrap: wrap;
+}
+
 .apc-rule-row .setting-item-info {
+	margin-right: 8px;
 	flex: 0 0 auto;
 }
 
 .apc-rule-row .setting-item-control {
 	flex: 1 1 auto;
+}
+
+.apc-rule-second-line {
+	flex: 0 0 100%;
+	width: 100%;
+
+	display: flex;
+	align-items: center;
+	gap: 6px;
+
+	margin-top: 6px;
+	padding: 4px 8px;
+
+	color: var(--text-error);
+	background: rgba(var(--background-modifier-error-rgb), 0.08);
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+}
+
+.apc-rule-error-icon {
+	display: flex;
+	flex: 0 0 auto;
+}
+
+.apc-rule-error-icon svg {
+	width: 14px;
+	height: 14px;
 }
 
 .apc-preview-status-list {

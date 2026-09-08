@@ -1,4 +1,4 @@
-import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
+import { App, ButtonComponent, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type {
 	SettingDefinitionItem,
 	SettingDefinitionList,
@@ -186,7 +186,8 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 					this.update();
 				}
 			},			
-			items: this.plugin.settings.rules.map((rule, index) => this.buildRuleDefinition(rule, index))
+			items: this.plugin.settings.rules.map((rule, index) => 
+				this.buildRuleDefinition(rule, index))
 		};
 	}
 
@@ -329,12 +330,32 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 	private updateRowValidity(setting: Setting, rule: ParentRule): void {
 		const compiled = compileExpression(rule.expression);
 
+		let errorEl = setting.settingEl.querySelector<HTMLElement>(
+			".apc-rule-second-line"
+		);
+
 		if ("error" in compiled) {
-			setting.setDesc(`Expression error: ${compiled.error}`);
-			setting.settingEl.classList.add("apc-rule-error");
+			if (!errorEl) {
+				errorEl = setting.settingEl.createDiv({
+					cls: "apc-rule-second-line",
+				});
+
+				const iconEl = errorEl.createSpan({
+					cls: "apc-rule-error-icon",
+				});
+
+				setIcon(iconEl, "circle-alert");
+
+				errorEl.createSpan({
+					cls: "apc-rule-error-text",
+				});
+			}
+
+			errorEl
+				.querySelector<HTMLElement>(".apc-rule-error-text")
+				?.setText(`Expression error: ${compiled.error}`);
 		} else {
-			setting.setDesc("");
-			setting.settingEl.classList.remove("apc-rule-error");
+			errorEl?.remove();
 		}
 	}
 }
