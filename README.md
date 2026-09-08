@@ -14,6 +14,10 @@ _※ Note: Tasks are ordered from top to bottom. Their horizontal positions in t
 - [Development](#development)
 - [Release Notes](#release-notes)
 
+> [!WARNING]
+> Task Cascade 1.0.0 and later requires Obsidian 1.13.0 or newer due to its use of the declarative settings API.\
+> If you're using an older version of Obsidian, install [Task Cascade 0.2.2](https://github.com/nikvoronin/task-cascade/releases/tag/0.2.2), the last compatible release.
+
 ## How it works
 
 Task Cascade watches editor changes with a short debounce, walks the checklist bottom-up so children are resolved before their parents, and only rewrites a checkbox's marker when the computed status actually differs from what's on the line — so it never touches lines that don't need to change.
@@ -105,6 +109,13 @@ Requirements: Node.js and npm installed.
    Verify the build succeeded by checking `npm run build` exits with code `0` and `main.js` has been updated.
 
 ## Release Notes
+
+### 1.0.0
+
+- Migrated the settings UI to Obsidian's new declarative Settings API (now requires Obsidian 1.13.0 or newer — see the warning above for older versions)
+- Rules can now be reordered by dragging, not just with up/down buttons
+- "Reset rules to defaults" now asks for confirmation before replacing all rules
+- Invalid rule expressions now show a clearer error banner instead of just recoloring the row description
 
 ### 0.2.1
 
