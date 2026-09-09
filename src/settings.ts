@@ -1,4 +1,4 @@
-import { App, ButtonComponent, PluginSettingTab, Setting, setIcon } from "obsidian";
+import { App, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type {
 	SettingDefinitionItem,
 	SettingDefinitionList,
@@ -96,7 +96,7 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 					type: "dropdown",
 					key: "unknownCheckboxDefaultState",
 					options: Object.fromEntries(
-						UNKNOWN_CHECKBOX_DEFAULT_STATES.map((state) => [state, STATE_LABELS[state]])
+						UNKNOWN_CHECKBOX_DEFAULT_STATES.map((state): [string, string] => [state, STATE_LABELS[state]])
 					)
 				}
 			},
