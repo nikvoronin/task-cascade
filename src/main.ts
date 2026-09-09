@@ -8,7 +8,7 @@ import {
 } from "./settings";
 
 export default class AutoParentCheckboxPlugin extends Plugin {
-	settings!: AutoParentCheckboxSettings;
+	declare settings: AutoParentCheckboxSettings;
 	private isApplying = false;
 	private timer: number | null = null;
 
