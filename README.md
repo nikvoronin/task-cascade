@@ -76,6 +76,18 @@ If `Task Cascade` isn't available in the Community plugins catalog yet, you can 
 2. Create a folder named `task-cascade` inside your vault's `.obsidian/plugins/` directory and place the three downloaded files there.
 3. In Obsidian, open **Settings → Community plugins**, reload the plugin list if needed, and enable **Task Cascade**.
 
+## Alternatives
+
+- [Checkbox Autochecker](https://github.com/klaasklee/checkbox-autochecker-obsidian) (by klaasklee) – offers predefined 3 propagation modes (Loose, Partial, and Strict) to control exactly how parent and child checkboxes sync in both upward and downward directions.
+- [Checkbox Sync](https://github.com/groldsf/obsidian_check_plugin) (by groldsf) – focus on multi-status logic, this plugin provides straightforward bidirectional syncing paired with built-in rules to ignore specific files or folders from processing.
+
+## Related Projects
+
+If you are looking for a different approach to checkbox management, check out these alternatives:
+
+- **[Checkbox Autochecker](https://github.com/klaasklee/checkbox-autochecker-obsidian)** (by klaasklee) — Unlike Task Cascade's customizable rule expressions, this plugin offers predefined propagation modes (Loose, Partial Strict, and Strict) to control exactly how parent and child checkboxes sync in both upward and downward directions.
+- **[Checkbox Sync](https://github.com/groldsf/obsidian_check_plugin)** (by groldsf) — Unlike Task Cascade's focus on multi-status logic, this plugin provides straightforward bidirectional syncing paired with built-in rules to ignore specific files or folders from processing.
+
 ## Development
 
 Requirements: Node.js and npm installed.
