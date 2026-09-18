@@ -9,6 +9,7 @@ _※ Note: Tasks are ordered from top to bottom. Their horizontal positions in t
 - [How it works](#how-it-works)
 - [Supported statuses](#supported-statuses)
 - [Configurable rules](#configurable-rules)
+- [Disabling the cascade sync for a note](#disabling-the-cascade-sync-for-a-note)
 - [Settings](#settings)
 - [Manual installation](#manual-installation)
 - [Alternatives](#alternatives)
@@ -59,6 +60,18 @@ The default rules ship ready to use:
 6. Any child not Cancelled and not Forwarded → In Progress
 
 If nothing matches, the parent is left untouched.
+
+## Disabling the cascade sync for a note
+
+Add this to a note's frontmatter to turn off the parent-checkbox cascade sync for that note only:
+
+```yaml
+---
+task-cascade-enable: false
+---
+```
+
+The `#task.` shortcut keeps working regardless — this only opts a note out of automatic parent-checkbox updates. Omitting the key, or setting it to `true`, keeps the default (enabled) behavior.
 
 ## Settings
 
@@ -115,6 +128,10 @@ Requirements: Node.js and npm installed.
    Verify the build succeeded by checking `npm run build` exits with code `0` and `main.js` has been updated.
 
 ## Release Notes
+
+### 1.1.0
+
+- Added a `task-cascade-enable: false` frontmatter key to disable the cascade sync on a per-note basis (the `#task.` shortcut is unaffected)
 
 ### 1.0.0
 
