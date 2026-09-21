@@ -1,5 +1,6 @@
 import { Editor, MarkdownFileInfo, MarkdownView, Plugin } from "obsidian";
 import { computeCheckboxEdits } from "./checkboxSync";
+import { isTaskCascadeEnabledForFile } from "./frontmatterGate";
 import { computeTaskDotShortcut } from "./taskTagShortcut";
 import {
 	AutoParentCheckboxSettings,
@@ -21,8 +22,8 @@ export default class AutoParentCheckboxPlugin extends Plugin {
 		this.registerEvent(
 			this.app.workspace.on(
 				"editor-change",
-				(editor: Editor, _info: MarkdownView | MarkdownFileInfo) => {
-					this.handleEditorChange(editor);
+				(editor: Editor, info: MarkdownView | MarkdownFileInfo) => {
+					this.handleEditorChange(editor, info);
 				}
 			)
 		);
@@ -39,10 +40,13 @@ export default class AutoParentCheckboxPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	private handleEditorChange(editor: Editor) {
+	private handleEditorChange(editor: Editor, info: MarkdownView | MarkdownFileInfo) {
 		if (this.isApplying) return;
 
 		this.applyTaskDotShortcut(editor);
+
+		if (!isTaskCascadeEnabledForFile(this.app, info.file)) return;
+
 		this.scheduleUpdate(editor);
 	}
 
