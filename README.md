@@ -68,8 +68,9 @@ The default rules ship ready to use:
 2. All children Cancelled → Cancelled
 3. All children Forwarded → Forwarded
 4. All children Todo → Todo
-5. All children Done, Cancelled, or Forwarded → Done
-6. Any child not Cancelled and not Forwarded → In Progress
+5. All children Scheduling → In Progress
+6. All children Done, Cancelled, or Forwarded → Done
+7. Any child not Cancelled and not Forwarded → In Progress
 
 If nothing matches, the parent is left untouched.
 
@@ -139,7 +140,22 @@ Requirements: Node.js and npm installed.
 
    Verify the build succeeded by checking `npm run build` exits with code `0` and `main.js` has been updated.
 
+5. **Run the tests and the linter:**
+
+   ```bash
+   npm test
+   npm run lint
+   ```
+
+   `npm test` runs the [Vitest](https://vitest.dev) suite in `tests/`; `npm run lint` runs ESLint with the Obsidian plugin rules.
+
 ## Release Notes
+
+### 1.2.3
+
+- Renamed the settings page CSS classes from `apc-*` to `tc-*`; custom CSS snippets that target the old class names need updating
+- Fixed the default rules list in this README (there are 7 rules, including "All children Scheduling → In Progress")
+- Added an automated test suite (`npm test`) and an ESLint configuration (`npm run lint`)
 
 ### 1.2.2
 

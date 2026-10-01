@@ -3,21 +3,21 @@ import { computeCheckboxEdits } from "./checkboxSync";
 import { isTaskCascadeEnabledForFile } from "./frontmatterGate";
 import { computeTaskDotShortcut } from "./taskTagShortcut";
 import {
-	AutoParentCheckboxSettings,
-	AutoParentRuleSettingTab,
+	TaskCascadeSettings,
+	TaskCascadeSettingTab,
 	createDefaultSettings
 } from "./settings";
 
-export default class AutoParentCheckboxPlugin extends Plugin {
-	declare settings: AutoParentCheckboxSettings;
+export default class TaskCascadePlugin extends Plugin {
+	declare settings: TaskCascadeSettings;
 	private isApplying = false;
 	private timer: number | null = null;
 
 	async onload() {
-		const loadedData = (await this.loadData()) as Partial<AutoParentCheckboxSettings> | null;
+		const loadedData = (await this.loadData()) as Partial<TaskCascadeSettings> | null;
 		this.settings = Object.assign(createDefaultSettings(), loadedData);
 
-		this.addSettingTab(new AutoParentRuleSettingTab(this.app, this));
+		this.addSettingTab(new TaskCascadeSettingTab(this.app, this));
 
 		this.registerEvent(
 			this.app.workspace.on(
@@ -66,7 +66,7 @@ export default class AutoParentCheckboxPlugin extends Plugin {
 				shortcut.newLine,
 				{ line: cursor.line, ch: 0 },
 				{ line: cursor.line, ch: line.length },
-				"auto-parent-checkbox"
+				"task-cascade"
 			);
 
 			editor.setCursor({ line: cursor.line, ch: shortcut.newCursorCh });
@@ -112,7 +112,7 @@ export default class AutoParentCheckboxPlugin extends Plugin {
 					edit.text,
 					{ line: edit.line, ch: 0 },
 					{ line: edit.line, ch: oldLine.length },
-					"auto-parent-checkbox"
+					"task-cascade"
 				);
 			}
 		} finally {

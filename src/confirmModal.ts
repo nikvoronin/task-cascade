@@ -5,6 +5,7 @@ export class ConfirmModal extends Modal {
 		app: App,
 		private title: string,
 		private message: string,
+		private confirmText: string,
 		private onConfirm: () => void | Promise<void>,
 	) {
 		super(app);
@@ -29,7 +30,7 @@ export class ConfirmModal extends Modal {
 			)
 			.addButton((button) =>
 				button
-					.setButtonText("Reset")
+					.setButtonText(this.confirmText)
 					.setDestructive()
 					.setCta()
 					.onClick(async () => {

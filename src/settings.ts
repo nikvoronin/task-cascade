@@ -4,7 +4,7 @@ import type {
 	SettingDefinitionList,
 	SettingDefinitionRender
 } from "obsidian";
-import type AutoParentCheckboxPlugin from "./main";
+import type TaskCascadePlugin from "./main";
 import { IGNORE_UNKNOWN_CHECKBOX, TaskState, TaskStateWithPolicy } from "./taskState";
 import { stateToMarker } from "./checkboxSync";
 import { ParentRule, RuleQuantifier } from "./rules/ruleTypes";
@@ -12,7 +12,7 @@ import { compileExpression, ruleMatches } from "./rules/ruleLanguage";
 import { DEFAULT_RULES } from "./rules/defaultRules";
 import { ConfirmModal } from "./confirmModal";
 
-export interface AutoParentCheckboxSettings {
+export interface TaskCascadeSettings {
 	rules: ParentRule[];
 	nextRuleId: number;
 	taskDotShortcutEnabled: boolean;
@@ -23,7 +23,7 @@ function cloneDefaultRules(): ParentRule[] {
 	return DEFAULT_RULES.map((rule) => ({ ...rule }));
 }
 
-export function createDefaultSettings(): AutoParentCheckboxSettings {
+export function createDefaultSettings(): TaskCascadeSettings {
 	return {
 		rules: cloneDefaultRules(),
 		nextRuleId: DEFAULT_RULES.length,
@@ -32,7 +32,7 @@ export function createDefaultSettings(): AutoParentCheckboxSettings {
 	};
 }
 
-export const DEFAULT_SETTINGS: AutoParentCheckboxSettings = createDefaultSettings();
+export const DEFAULT_SETTINGS: TaskCascadeSettings = createDefaultSettings();
 
 const ALL_STATES: TaskState[] = [
 	TaskState.Todo,
@@ -65,13 +65,13 @@ const CHECKBOX_W_IGNORE_LABELS: Record<TaskStateWithPolicy, string> = {
 	[IGNORE_UNKNOWN_CHECKBOX]: "Ignore"
 };
 
-export class AutoParentRuleSettingTab extends PluginSettingTab {
-	plugin: AutoParentCheckboxPlugin;
+export class TaskCascadeSettingTab extends PluginSettingTab {
+	plugin: TaskCascadePlugin;
 	private readonly previewStates = new Set<TaskState>();
 	private includeUnknownCheckboxInPreview = false;
 	private previewResultEl: HTMLElement | null = null;
 
-	constructor(app: App, plugin: AutoParentCheckboxPlugin) {
+	constructor(app: App, plugin: TaskCascadePlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -82,7 +82,7 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 				name: "Rules Preview",
 				desc: "Check which statuses are present among the children, and see the result.",
 				render: (setting) => {
-					const previewEl = setting.descEl.createDiv({ cls: "apc-preview-card" });
+					const previewEl = setting.descEl.createDiv({ cls: "tc-preview-card" });
 
 					this.renderPreviewBody(previewEl);
 
@@ -124,6 +124,7 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 									"Reset rules to defaults?",
 									"This will permanently replace all existing rules with the default set. "
 										+ "This action cannot be undone.",
+									"Reset",
 									async () => {
 										this.plugin.settings.rules = cloneDefaultRules();
 										this.plugin.settings.nextRuleId = DEFAULT_RULES.length;
@@ -203,7 +204,7 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 		return {
 			name: `Rule ${index + 1}`,
 			render: (setting) => {
-				setting.settingEl.addClass("apc-rule-row");
+				setting.settingEl.addClass("tc-rule-row");
 
 				setting.addToggle((toggle) =>
 					toggle.setValue(rule.enabled).onChange(async (value) => {
@@ -225,7 +226,7 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 				);
 
 				setting.addText((text) => {
-					text.inputEl.addClass("apc-rule-expression");
+					text.inputEl.addClass("tc-rule-expression");
 					text
 						.setPlaceholder("Done or cancelled or forwarded")
 						.setValue(rule.expression)
@@ -255,17 +256,17 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 	}
 
 	private renderPreviewBody(previewEl: HTMLElement): void {
-		this.previewResultEl = previewEl.createEl("p", { cls: "apc-preview-result" });
+		this.previewResultEl = previewEl.createEl("p", { cls: "tc-preview-result" });
 
-		const statusListEl = previewEl.createDiv({ cls: "apc-preview-status-list" });
+		const statusListEl = previewEl.createDiv({ cls: "tc-preview-status-list" });
 
 		for (const state of ALL_STATES) {
-			const rowEl = statusListEl.createEl("label", { cls: "apc-preview-status" });
+			const rowEl = statusListEl.createEl("label", { cls: "tc-preview-status" });
 
 			const checkbox = rowEl.createEl("input", { type: "checkbox" });
 			checkbox.checked = this.previewStates.has(state);
 
-			rowEl.createSpan({ cls: "apc-preview-marker", text: `[${stateToMarker(state)}]` });
+			rowEl.createSpan({ cls: "tc-preview-marker", text: `[${stateToMarker(state)}]` });
 			rowEl.createSpan({ text: STATE_LABELS[state] });
 
 			checkbox.addEventListener("change", () => {
@@ -279,12 +280,12 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 			});
 		}
 
-		const unknownCheckboxRowEl = statusListEl.createEl("label", { cls: "apc-preview-status" });
+		const unknownCheckboxRowEl = statusListEl.createEl("label", { cls: "tc-preview-status" });
 
 		const unknownCheckboxCheckbox = unknownCheckboxRowEl.createEl("input", { type: "checkbox" });
 		unknownCheckboxCheckbox.checked = this.includeUnknownCheckboxInPreview;
 
-		unknownCheckboxRowEl.createSpan({ cls: "apc-preview-marker", text: "[⁇]" });
+		unknownCheckboxRowEl.createSpan({ cls: "tc-preview-marker", text: "[⁇]" });
 		const unknownPolicy = this.plugin.settings.unknownCheckboxDefaultState;
 
 		unknownCheckboxRowEl.createSpan({
@@ -313,7 +314,7 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 		}
 
 		if (childStates.length === 0) {
-			this.previewResultEl.setText("- [ ] Check at least one status...");
+			this.previewResultEl.setText("- [ ] check at least one status...");
 			return;
 		}
 
@@ -345,28 +346,28 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 		const compiled = compileExpression(rule.expression);
 
 		let errorEl = setting.settingEl.querySelector<HTMLElement>(
-			".apc-rule-second-line"
+			".tc-rule-second-line"
 		);
 
 		if ("error" in compiled) {
 			if (!errorEl) {
 				errorEl = setting.settingEl.createDiv({
-					cls: "apc-rule-second-line",
+					cls: "tc-rule-second-line",
 				});
 
 				const iconEl = errorEl.createSpan({
-					cls: "apc-rule-error-icon",
+					cls: "tc-rule-error-icon",
 				});
 
 				setIcon(iconEl, "circle-alert");
 
 				errorEl.createSpan({
-					cls: "apc-rule-error-text",
+					cls: "tc-rule-error-text",
 				});
 			}
 
 			errorEl
-				.querySelector<HTMLElement>(".apc-rule-error-text")
+				.querySelector<HTMLElement>(".tc-rule-error-text")
 				?.setText(`Expression error: ${compiled.error}`);
 		} else {
 			errorEl?.remove();
