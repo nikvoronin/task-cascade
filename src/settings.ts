@@ -5,7 +5,7 @@ import type {
 	SettingDefinitionRender
 } from "obsidian";
 import type AutoParentCheckboxPlugin from "./main";
-import { TaskState } from "./taskState";
+import { IGNORE_UNKNOWN_CHECKBOX, TaskState, TaskStateWithPolicy } from "./taskState";
 import { stateToMarker } from "./checkboxSync";
 import { ParentRule, RuleQuantifier } from "./rules/ruleTypes";
 import { compileExpression, ruleMatches } from "./rules/ruleLanguage";
@@ -16,7 +16,7 @@ export interface AutoParentCheckboxSettings {
 	rules: ParentRule[];
 	nextRuleId: number;
 	taskDotShortcutEnabled: boolean;
-	unknownCheckboxDefaultState: TaskState;
+	unknownCheckboxDefaultState: TaskStateWithPolicy;
 }
 
 function cloneDefaultRules(): ParentRule[] {
@@ -28,7 +28,7 @@ export function createDefaultSettings(): AutoParentCheckboxSettings {
 		rules: cloneDefaultRules(),
 		nextRuleId: DEFAULT_RULES.length,
 		taskDotShortcutEnabled: true,
-		unknownCheckboxDefaultState: TaskState.Todo
+		unknownCheckboxDefaultState: IGNORE_UNKNOWN_CHECKBOX
 	};
 }
 
@@ -43,7 +43,8 @@ const ALL_STATES: TaskState[] = [
 	TaskState.Scheduling
 ];
 
-const UNKNOWN_CHECKBOX_DEFAULT_STATES: TaskState[] = [
+const CHECKBOX_W_IGNORE_DEFAULT_STATES: TaskStateWithPolicy[] = [
+	IGNORE_UNKNOWN_CHECKBOX,
 	TaskState.Todo,
 	TaskState.Done,
 	TaskState.Cancelled,
@@ -57,6 +58,11 @@ const STATE_LABELS: Record<TaskState, string> = {
 	[TaskState.Forwarded]: "Forwarded",
 	[TaskState.InProgress]: "In Progress",
 	[TaskState.Scheduling]: "Scheduling"
+};
+
+const CHECKBOX_W_IGNORE_LABELS: Record<TaskStateWithPolicy, string> = {
+	...STATE_LABELS,
+	[IGNORE_UNKNOWN_CHECKBOX]: "Ignore"
 };
 
 export class AutoParentRuleSettingTab extends PluginSettingTab {
@@ -89,14 +95,16 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 				name: "Unknown checkbox status",
 				desc:
 					"Default value used when a checkbox has a single unrecognized status character " +
-					"(e.g. \"- [?]\"). List items that aren't checkboxes at all, and checkboxes " +
+					"(e.g. \"- [?]\"). Choose Ignore to leave such checkboxes out of the parent's " +
+						"rules entirely. List items that aren't checkboxes at all, and checkboxes " +
 					"with empty or multi-character brackets (e.g. \"- []\", \"- [xy]\"), are " +
 					"ignored and never affect a parent's rules.",
 				control: {
 					type: "dropdown",
 					key: "unknownCheckboxDefaultState",
 					options: Object.fromEntries(
-						UNKNOWN_CHECKBOX_DEFAULT_STATES.map((state): [string, string] => [state, STATE_LABELS[state]])
+						CHECKBOX_W_IGNORE_DEFAULT_STATES.map((state): [string, string] => 
+							[state, CHECKBOX_W_IGNORE_LABELS[state]])
 					)
 				}
 			},
@@ -277,9 +285,14 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 		unknownCheckboxCheckbox.checked = this.includeUnknownCheckboxInPreview;
 
 		unknownCheckboxRowEl.createSpan({ cls: "apc-preview-marker", text: "[⁇]" });
+		const unknownPolicy = this.plugin.settings.unknownCheckboxDefaultState;
+
 		unknownCheckboxRowEl.createSpan({
 			text: `Checkbox with unrecognized status ` +
-				`(as "${STATE_LABELS[this.plugin.settings.unknownCheckboxDefaultState]}")`});
+				(unknownPolicy === IGNORE_UNKNOWN_CHECKBOX
+					? "(ignored)"
+					: `(as "${STATE_LABELS[unknownPolicy]}")`)
+		});
 
 		unknownCheckboxCheckbox.addEventListener("change", () => {
 			this.includeUnknownCheckboxInPreview = unknownCheckboxCheckbox.checked;
@@ -292,15 +305,16 @@ export class AutoParentRuleSettingTab extends PluginSettingTab {
 	private updatePreviewResult(): void {
 		if (!this.previewResultEl) return;
 
-		if (this.previewStates.size === 0 && !this.includeUnknownCheckboxInPreview) {
-			this.previewResultEl.setText("- [ ] Check at least one status...");
-			return;
+		const childStates = Array.from(this.previewStates);
+		const unknownPolicy = this.plugin.settings.unknownCheckboxDefaultState;
+
+		if (this.includeUnknownCheckboxInPreview && unknownPolicy !== IGNORE_UNKNOWN_CHECKBOX) {
+			childStates.push(unknownPolicy);
 		}
 
-		const childStates = Array.from(this.previewStates);
-
-		if (this.includeUnknownCheckboxInPreview) {
-			childStates.push(this.plugin.settings.unknownCheckboxDefaultState);
+		if (childStates.length === 0) {
+			this.previewResultEl.setText("- [ ] Check at least one status...");
+			return;
 		}
 
 		let matchedRuleNumber: number | null = null;

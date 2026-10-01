@@ -37,7 +37,9 @@ Task Cascade watches editor changes with a short debounce, walks the checklist b
 
 ### Unrecognized or missing checkbox status
 
-A checkbox whose status is a single character that isn't one of the markers above (e.g. `- [⁇]`) counts toward its parent's rules as a configurable default status — `Todo`, `Done`, `Cancelled`, or `In Progress` (`Todo` by default). Plain list items that aren't checkboxes at all, and malformed checkboxes with empty (`- []`) or multi-character (`- [xyz]`) brackets, are always ignored — they never affect a parent's computed status.
+A checkbox whose status is a single character that isn't one of the markers above (e.g. `- [⁇]`) is ignored by default: it is skipped like a plain list item or an empty `- []`, and never affects its parent. Checkboxes nested under an ignored checkbox attach to the nearest checkbox above it instead, so a parent whose only children are unrecognized checkboxes is left untouched.
+
+Pick a status instead — `Todo`, `Done`, `Cancelled`, or `In Progress` — to make such checkboxes count toward their parent's rules as that status. Plain list items that aren't checkboxes at all, and malformed checkboxes with empty (`- []`) or multi-character (`- [xyz]`) brackets, are always ignored — they never affect a parent's computed status.
 
 ## Configurable rules
 
@@ -78,7 +80,7 @@ The `#task.` shortcut keeps working regardless — this only opts a note out of 
 Open **Settings → Community plugins → Task Cascade** to:
 
 - **Preview rules** — check off which statuses are present among a set of children and see which rule fires and what the parent would become, without touching a real file.
-- **Set the unknown-checkbox default** — pick which status (Todo, Done, Cancelled, or In Progress) a checkbox with an unrecognized single-character marker counts as; this same value can be toggled on in the rule preview to see its effect.
+- **Set the unknown-checkbox default** — choose whether a checkbox with an unrecognized single-character marker is ignored (the default) or counts as Todo, Done, Cancelled, or In Progress; this same value can be toggled on in the rule preview to see its effect.
 - **Edit rules** — change any rule's quantifier, expression, or outcome; add new rules; reorder or delete existing ones; reset back to the defaults at any time.
 - **Toggle the `#task.` shortcut** — typing a period immediately after `#task` on a checklist line removes the period and appends `🏁delete` to the line, so you can keep typing the task's description right after the tag. Turn this off if you don't use it.
 
@@ -128,6 +130,11 @@ Requirements: Node.js and npm installed.
    Verify the build succeeded by checking `npm run build` exits with code `0` and `main.js` has been updated.
 
 ## Release Notes
+
+### 1.2.0
+
+- Added an `Ignore` option to **Unknown checkbox status**: checkboxes with an unrecognized single-character marker (e.g. `- [?]`) are skipped and never affect their parent
+- **Changed default:** `Ignore` is now the default for new installs and for settings that were never saved; previously unrecognized checkboxes counted as `Todo`. To keep the old behavior, set **Unknown checkbox status** to `Todo` in **Settings → Community plugins → Task Cascade**
 
 ### 1.1.0
 

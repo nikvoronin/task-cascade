@@ -1,4 +1,4 @@
-import { TaskState } from "./taskState";
+import { IGNORE_UNKNOWN_CHECKBOX, TaskState, TaskStateWithPolicy } from "./taskState";
 import { ParentRule } from "./rules/ruleTypes";
 import { CompiledExpression, compileExpression, ruleMatches } from "./rules/ruleLanguage";
 
@@ -110,7 +110,7 @@ function replaceCheckboxMarker(line: string, marker: string): string {
 export function computeCheckboxEdits(
 	content: string,
 	rules: ParentRule[],
-	unknownCheckboxDefaultState: TaskState
+	defaultTaskState: TaskStateWithPolicy
 ): Array<{ line: number; text: string }> {
 	const compiledRules: CompiledRule[] = rules.map((rule) => ({
 		rule,
@@ -142,12 +142,15 @@ export function computeCheckboxEdits(
 
 		if (!unknownMatch) continue;
 
+		// Skipped like a plain list item: it never counts toward a parent.
+		if (defaultTaskState === IGNORE_UNKNOWN_CHECKBOX) continue;
+
 		lineToTaskIndex.set(lineNo, tasks.length);
 		tasks.push({
 			line: lineNo,
 			raw,
 			indent: measureIndent(unknownMatch[1]!),
-			state: unknownCheckboxDefaultState,
+			state: defaultTaskState,
 			isCheckbox: false,
 			children: []
 		});
