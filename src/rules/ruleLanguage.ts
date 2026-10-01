@@ -7,7 +7,12 @@ type ExprNode =
 	| { type: "and"; left: ExprNode; right: ExprNode }
 	| { type: "or"; left: ExprNode; right: ExprNode };
 
-export type CompiledExpression = { ast: ExprNode } | { error: string };
+// A compiled expression is a truth table: one bit per status, set where the expression holds.
+export type CompiledExpression = { mask: number } | { error: string };
+
+const STATE_BIT = Object.fromEntries(
+	Object.values(TaskState).map((state, index) => [state, 1 << index])
+) as Record<TaskState, number>;
 
 const STATE_ALIASES: Record<string, TaskState> = {
 	todo: TaskState.Todo,
@@ -109,7 +114,13 @@ export function compileExpression(expression: string): CompiledExpression {
 			return { error: "unexpected trailing tokens" };
 		}
 
-		return { ast };
+		let mask = 0;
+
+		for (const state of Object.values(TaskState)) {
+			if (evalNode(ast, state)) mask |= STATE_BIT[state];
+		}
+
+		return { mask };
 	} catch (err) {
 		return { error: err instanceof Error ? err.message : "invalid expression" };
 	}
@@ -135,7 +146,19 @@ export function ruleMatches(
 ): boolean {
 	if ("error" in compiled) return false;
 
-	return rule.quantifier === "all"
-		? childStates.every((state) => evalNode(compiled.ast, state))
-		: childStates.some((state) => evalNode(compiled.ast, state));
+	const { mask } = compiled;
+
+	if (rule.quantifier === "all") {
+		for (const state of childStates) {
+			if ((mask & STATE_BIT[state]) === 0) return false;
+		}
+
+		return true;
+	}
+
+	for (const state of childStates) {
+		if ((mask & STATE_BIT[state]) !== 0) return true;
+	}
+
+	return false;
 }
