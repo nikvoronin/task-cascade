@@ -1,28 +1,28 @@
-.apc-preview-result {
+.tc-preview-result {
 	font-weight: 600;
 	color: var(--text-accent);
 	font-family: var(--font-monospace);
 }
 
-.apc-rule-expression {
+.tc-rule-expression {
 	flex: 1 1 auto;
 	width: auto;
 }
 
-.apc-rule-row {
+.tc-rule-row {
 	flex-wrap: wrap;
 }
 
-.apc-rule-row .setting-item-info {
+.tc-rule-row .setting-item-info {
 	margin-right: 8px;
 	flex: 0 0 auto;
 }
 
-.apc-rule-row .setting-item-control {
+.tc-rule-row .setting-item-control {
 	flex: 1 1 auto;
 }
 
-.apc-rule-second-line {
+.tc-rule-second-line {
 	flex: 0 0 100%;
 	width: 100%;
 
@@ -39,44 +39,44 @@
 	font-size: var(--font-ui-smaller);
 }
 
-.apc-rule-error-icon {
+.tc-rule-error-icon {
 	display: flex;
 	flex: 0 0 auto;
 }
 
-.apc-rule-error-icon svg {
+.tc-rule-error-icon svg {
 	width: 14px;
 	height: 14px;
 }
 
-.apc-preview-status-list {
+.tc-preview-status-list {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
 	margin: 8px 0 16px 16px;
 }
 
-.apc-preview-status {
+.tc-preview-status {
 	display: flex;
 	align-items: center;
 	gap: 6px;
 	cursor: pointer;
 }
 
-.apc-preview-card {
+.tc-preview-card {
 	background: var(--background-secondary);
 }
 
-.apc-preview-marker {
+.tc-preview-marker {
 	font-family: var(--font-monospace);
 	color: var(--text-muted);
 }
 
-.apc-rule-actions .setting-item-info {
+.tc-rule-actions .setting-item-info {
 	flex: 0 0 auto;
 }
 
-.apc-rule-actions .setting-item-control {
+.tc-rule-actions .setting-item-control {
 	flex: 1 1 auto;
 	justify-content: flex-end;
 }
