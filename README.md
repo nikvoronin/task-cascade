@@ -57,7 +57,7 @@ Whenever you edit a checklist, Task Cascade looks at each parent's children and 
 
 Each rule has:
 
-- An **ALL** or **ANY** quantifier — does *every* child need to match, or just *one*?
+- An **ALL** or **ANY** quantifier — does _every_ child need to match, or just _one_?
 - An **expression** combining status names with `and`, `or`, and `not` (e.g. `done or cancelled or forwarded`).
 - An **outcome** status the parent becomes when the rule matches.
 - An **enabled** switch, so a rule can be turned off without deleting it.
@@ -140,6 +140,10 @@ Requirements: Node.js and npm installed.
    Verify the build succeeded by checking `npm run build` exits with code `0` and `main.js` has been updated.
 
 ## Release Notes
+
+### 1.2.2
+
+- Rule expressions are now compiled once and reused instead of on every editor change, which makes the cascade sync faster on small notes (no change in behavior)
 
 ### 1.2.1
 

@@ -88,6 +88,19 @@ function buildTaskTree(tasks: TaskLine[]) {
 
 type CompiledRule = { rule: ParentRule; compiled: CompiledExpression };
 
+// Rules are edited in place, so each entry remembers the expression it was compiled from.
+const compiledCache = new WeakMap<ParentRule, { expression: string; compiled: CompiledExpression }>();
+
+function getCompiled(rule: ParentRule): CompiledExpression {
+	const cached = compiledCache.get(rule);
+	if (cached && cached.expression === rule.expression) return cached.compiled;
+
+	const compiled = compileExpression(rule.expression);
+	compiledCache.set(rule, { expression: rule.expression, compiled });
+
+	return compiled;
+}
+
 // Rules are checked in list order: the first match wins.
 function computeParentStateFromRules(
 	childStates: TaskState[],
@@ -115,7 +128,7 @@ export function computeCheckboxEdits(
 ): Array<{ line: number; text: string }> {
 	const compiledRules: CompiledRule[] = rules.map((rule) => ({
 		rule,
-		compiled: compileExpression(rule.expression)
+		compiled: getCompiled(rule)
 	}));
 
 	const lines = content.split("\n");
