@@ -1,4 +1,5 @@
 import { IGNORE_UNKNOWN_CHECKBOX, TaskState, TaskStateWithPolicy } from "./taskState";
+import { RegionTracker } from "./ignoredRegions";
 import { ParentRule } from "./rules/ruleTypes";
 import { CompiledExpression, compileExpression, ruleMatches } from "./rules/ruleLanguage";
 
@@ -118,11 +119,16 @@ export function computeCheckboxEdits(
 	}));
 
 	const lines = content.split("\n");
+	const regions = new RegionTracker(lines);
 	const tasks: TaskLine[] = [];
 	const lineToTaskIndex = new Map<number, number>();
 
 	for (let lineNo = 0; lineNo < lines.length; lineNo++) {
 		const raw = lines[lineNo]!;
+
+		// Code blocks, frontmatter, math and comments hold no real tasks.
+		if (regions.isIgnored(raw, lineNo)) continue;
+
 		const taskMatch = raw.match(TASK_RE);
 
 		if (taskMatch) {
