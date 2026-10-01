@@ -110,7 +110,7 @@ If `Task Cascade` isn't available in the Community plugins catalog yet, you can 
 
 ## Development
 
-Requirements: Node.js and npm installed.
+Requirements: Node.js 22.12 or newer (24.x is used for releases) and npm installed.
 
 1. **Check `esbuild.config.mjs` exists.** The `dev`/`build` npm scripts call it directly (`node esbuild.config.mjs`) — without it the build won't even start. The standard config bundles from `src/main.ts` to `main.js`, with `external: ["obsidian", "electron", ...]`, `format: "cjs"`.
 
@@ -150,6 +150,10 @@ Requirements: Node.js and npm installed.
    `npm test` runs the [Vitest](https://vitest.dev) suite in `tests/`; `npm run lint` runs ESLint with the Obsidian plugin rules.
 
 ## Release Notes
+
+### 1.2.4
+
+- Resolved all `npm audit` findings in development dependencies: `moment` is forced to 2.31.x, `brace-expansion`, `fast-uri` and `js-yaml` are updated, and the test runner is upgraded to Vitest 5 (with esbuild 0.28.2); none of these are bundled into the plugin, so there is no change in behavior
 
 ### 1.2.3
 
