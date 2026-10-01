@@ -41,6 +41,16 @@ A checkbox whose status is a single character that isn't one of the markers abov
 
 Pick a status instead — `Todo`, `Done`, `Cancelled`, or `In Progress` — to make such checkboxes count toward their parent's rules as that status. Plain list items that aren't checkboxes at all, and malformed checkboxes with empty (`- []`) or multi-character (`- [xyz]`) brackets, are always ignored — they never affect a parent's computed status.
 
+### Where checkboxes are ignored
+
+Checkboxes that only look like tasks are never read or rewritten, and never affect a parent's status. This covers:
+
+- fenced code blocks (```` ``` ```` and `~~~`)
+- the note's frontmatter
+- `$$` math blocks
+- `%%` comments and `<!-- -->` HTML comments
+- blockquotes and callouts (lines starting with `>`)
+
 ## Configurable rules
 
 Whenever you edit a checklist, Task Cascade looks at each parent's children and decides whether the parent's own status should change. The decision is made by an ordered list of rules — the first rule that matches wins.
@@ -130,6 +140,10 @@ Requirements: Node.js and npm installed.
    Verify the build succeeded by checking `npm run build` exits with code `0` and `main.js` has been updated.
 
 ## Release Notes
+
+### 1.2.1
+
+- Checkboxes inside fenced code blocks, frontmatter, `$$` math blocks, and `%%` / `<!-- -->` comments are no longer treated as tasks by the cascade sync
 
 ### 1.2.0
 
