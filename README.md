@@ -37,9 +37,9 @@ Task Cascade watches editor changes with a short debounce, walks the checklist b
 
 ### Unrecognized or missing checkbox status
 
-A checkbox whose status is a single character that isn't one of the markers above (e.g. `- [⁇]`) is ignored by default: it is skipped like a plain list item or an empty `- []`, and never affects its parent. Checkboxes nested under an ignored checkbox attach to the nearest checkbox above it instead, so a parent whose only children are unrecognized checkboxes is left untouched.
+A checkbox whose status is a single character that isn't one of the markers above (e.g. `- [⁇]`) is ignored by default: it is skipped like a plain list item or an empty `- []`, and never affects its parent. Checkboxes nested under an ignored checkbox count toward the nearest checkbox above it in their own branch of the list (never toward a checkbox in a neighboring branch), so a parent whose only children are unrecognized checkboxes is left untouched.
 
-Pick a status instead — `Todo`, `Done`, `Cancelled`, or `In Progress` — to make such checkboxes count toward their parent's rules as that status. Plain list items that aren't checkboxes at all, and malformed checkboxes with empty (`- []`) or multi-character (`- [xyz]`) brackets, are always ignored — they never affect a parent's computed status.
+Pick a status instead — `Todo`, `Done`, `Cancelled`, or `In Progress` — to make such checkboxes count toward their parent's rules as that status. Plain list items that aren't checkboxes at all, and malformed checkboxes with empty (`- []`) or multi-character (`- [xyz]`) brackets, are always ignored — they never affect a parent's computed status. Checkboxes nested under such an item count toward the nearest checkbox above it in their own branch, and are not picked up by a checkbox in a neighboring branch.
 
 ### Where checkboxes are ignored
 
@@ -150,6 +150,10 @@ Requirements: Node.js 22.12 or newer (24.x is used for releases) and npm install
    `npm test` runs the [Vitest](https://vitest.dev) suite in `tests/`; `npm run lint` runs ESLint with the Obsidian plugin rules.
 
 ## Release Notes
+
+### 1.2.5
+
+- Fixed a child's status leaking into the previous neighboring branch: a checkbox nested under a plain list item (or an ignored `- [?]` checkbox) was counted toward the nearest earlier checkbox, even one in a different branch. It now counts only toward a checkbox above it in its own branch
 
 ### 1.2.4
 
