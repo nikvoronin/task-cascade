@@ -70,6 +70,34 @@ describe("unknown checkbox status", () => {
 	});
 });
 
+describe("plain list items", () => {
+	const branches = (b: string, c: string) =>
+		`- [ ] 1. Level 1\n    - a-2\n- 2. Level 1\n    - [${b}] b-2\n- [ ] 3. Level 1\n    - [${c}] c-2`;
+
+	it("keeps a task under a plain item out of the previous branch", () => {
+		expect(cascade(branches("/", " "))).toEqual(branches("/", " ").split("\n"));
+		expect(cascade(branches("x", " "))[0]).toBe("- [ ] 1. Level 1");
+	});
+
+	it("applies a task only to its own branch", () => {
+		const lines = cascade(branches("/", "x"));
+
+		expect(lines[0]).toBe("- [ ] 1. Level 1");
+		expect(lines[4]).toBe("- [x] 3. Level 1");
+	});
+
+	it("counts a task under a plain item toward its checkbox ancestor", () => {
+		expect(cascade("- [ ] p\n  - plain\n    - [x] c")[0]).toBe("- [x] p");
+	});
+
+	it("treats an ignored unknown checkbox the same way", () => {
+		const siblings = "- [ ] a\n- [?] x\n  - [x] c\n- [ ] b";
+
+		expect(cascade(siblings)).toEqual(siblings.split("\n"));
+		expect(cascade("- [ ] p\n  - [?] x\n    - [x] c")[0]).toBe("- [x] p");
+	});
+});
+
 describe("rules edited in place", () => {
 	const doc = "- [ ] p\n  - [x] a\n  - [x] b";
 

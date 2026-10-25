@@ -9,12 +9,17 @@ export const TASK_RE = /^(\s*)([-*+]|\d+[.)])\s+\[([ xX\-/><])\](.*)$/;
 
 const UNKNOWN_CHECKBOX_RE = /^(\s*)([-*+]|\d+[.)])\s+\[(.)\](.*)$/;
 
+const LIST_ITEM_RE = /^(\s*)([-*+]|\d+[.)])(?:\s|$)/;
+
 type TaskLine = {
 	line: number;
 	raw: string;
 	indent: number;
 	state: TaskState;
 	isCheckbox: boolean;
+	// A list item that never counts as a child state: it only keeps its subtree out of other branches.
+	transparent: boolean;
+	parent?: number;
 	children: number[];
 };
 
@@ -76,13 +81,27 @@ function buildTaskTree(tasks: TaskLine[]) {
 			stack.pop();
 		}
 
-		const parentIndex = stack[stack.length - 1];
+		task.parent = stack[stack.length - 1];
+		stack.push(i);
+	}
 
-		if (parentIndex !== undefined) {
-			tasks[parentIndex]!.children.push(i);
+	// Tasks under a transparent item count toward the nearest real ancestor in their own branch.
+	for (let i = 0; i < tasks.length; i++) {
+		const task = tasks[i]!;
+
+		if (task.transparent) continue;
+
+		let ancestor = task.parent;
+
+		while (ancestor !== undefined 
+			&& tasks[ancestor]!.transparent) 
+		{
+			ancestor = tasks[ancestor]!.parent;
 		}
 
-		stack.push(i);
+		if (ancestor !== undefined) {
+			tasks[ancestor]!.children.push(i);
+		}
 	}
 }
 
@@ -152,6 +171,7 @@ export function computeCheckboxEdits(
 				indent: measureIndent(taskMatch[1]!),
 				state: markerToState(taskMatch[3]!),
 				isCheckbox: true,
+				transparent: false,
 				children: []
 			});
 			continue;
@@ -159,18 +179,34 @@ export function computeCheckboxEdits(
 
 		const unknownMatch = raw.match(UNKNOWN_CHECKBOX_RE);
 
-		if (!unknownMatch) continue;
+		// An ignored unknown checkbox is skipped like a plain list item: it never counts toward a parent.
+		if (unknownMatch 
+			&& defaultTaskState !== IGNORE_UNKNOWN_CHECKBOX) 
+		{
+			lineToTaskIndex.set(lineNo, tasks.length);
+			tasks.push({
+				line: lineNo,
+				raw,
+				indent: measureIndent(unknownMatch[1]!),
+				state: defaultTaskState,
+				isCheckbox: false,
+				transparent: false,
+				children: []
+			});
+			continue;
+		}
 
-		// Skipped like a plain list item: it never counts toward a parent.
-		if (defaultTaskState === IGNORE_UNKNOWN_CHECKBOX) continue;
+		const itemMatch = raw.match(LIST_ITEM_RE);
 
-		lineToTaskIndex.set(lineNo, tasks.length);
+		if (!itemMatch) continue;
+
 		tasks.push({
 			line: lineNo,
 			raw,
-			indent: measureIndent(unknownMatch[1]!),
-			state: defaultTaskState,
+			indent: measureIndent(itemMatch[1]!),
+			state: TaskState.Todo,
 			isCheckbox: false,
+			transparent: true,
 			children: []
 		});
 	}
